@@ -1,3 +1,4 @@
+# Builds the unsigned sideload IPA for the LiveContainer StikJIT patch.
 name: Build ManicEMU unsigned IPA
 
 on:
@@ -48,25 +49,25 @@ jobs:
 
       - name: Resolve Swift packages
         run: |
-          xcodebuild \
-            -resolvePackageDependencies \
-            -project ManicEmu/ManicEmu.xcodeproj \
+          xcodebuild \\
+            -resolvePackageDependencies \\
+            -project ManicEmu/ManicEmu.xcodeproj \\
             -scheme ManicEmuSideload
 
       - name: Archive sideload build (unsigned)
         run: |
           set -o pipefail
-          xcodebuild \
-            -project ManicEmu/ManicEmu.xcodeproj \
-            -scheme ManicEmuSideload \
-            -configuration SideloadRelease \
-            -destination 'generic/platform=iOS' \
-            -archivePath "$RUNNER_TEMP/ManicEMU.xcarchive" \
-            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
-            -skipPackagePluginValidation \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGN_IDENTITY="" \
+          xcodebuild \\
+            -project ManicEmu/ManicEmu.xcodeproj \\
+            -scheme ManicEmuSideload \\
+            -configuration SideloadRelease \\
+            -destination 'generic/platform=iOS' \\
+            -archivePath "$RUNNER_TEMP/ManicEMU.xcarchive" \\
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" \\
+            -skipPackagePluginValidation \\
+            CODE_SIGNING_ALLOWED=NO \\
+            CODE_SIGNING_REQUIRED=NO \\
+            CODE_SIGN_IDENTITY="" \\
             archive
 
       - name: Package unsigned IPA
