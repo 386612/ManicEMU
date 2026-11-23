@@ -1,0 +1,90 @@
+name: Build ManicEMU unsigned IPA
+
+on:
+  push:
+    branches:
+      - fix/builtin-stikjit-livecontainer
+    paths:
+      - ".github/workflows/build-ipa.yml"
+      - "ManicEmu/**"
+      - "Dependencies/**"
+      - "Cores/**"
+      - "System.core/**"
+      - ".gitmodules"
+      - ".gitattributes"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: manicemu-ipa-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-ipa:
+    runs-on: macos-26
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout source, submodules, and Git LFS assets
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          lfs: true
+          fetch-depth: 0
+
+      - name: Verify Git LFS assets
+        run: |
+          git lfs install
+          git lfs pull
+          git lfs checkout
+          bash Scripts/VerifyLFS.sh
+
+      - name: Show Xcode version
+        run: |
+          xcodebuild -version
+          xcodebuild -showsdks
+
+      - name: Resolve Swift packages
+        run: |
+          xcodebuild \
+            -resolvePackageDependencies \
+            -project ManicEmu/ManicEmu.xcodeproj \
+            -scheme ManicEmuSideload
+
+      - name: Archive sideload build (unsigned)
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project ManicEmu/ManicEmu.xcodeproj \
+            -scheme ManicEmuSideload \
+            -configuration SideloadRelease \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/ManicEMU.xcarchive" \
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            archive
+
+      - name: Package unsigned IPA
+        run: |
+          set -euo pipefail
+          APP_PATH="$(find "$RUNNER_TEMP/ManicEMU.xcarchive/Products/Applications" -maxdepth 1 -type d -name '*.app' -print -quit)"
+          if [[ -z "$APP_PATH" ]]; then
+            echo "No .app product found in archive" >&2
+            exit 1
+          fi
+          mkdir -p "$RUNNER_TEMP/ipa/Payload"
+          ditto "$APP_PATH" "$RUNNER_TEMP/ipa/Payload/$(basename "$APP_PATH")"
+          ditto -c -k --sequesterRsrc --keepParent "$RUNNER_TEMP/ipa/Payload" "$RUNNER_TEMP/ManicEMU-unsigned.ipa"
+          ls -lh "$RUNNER_TEMP/ManicEMU-unsigned.ipa"
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ManicEMU-unsigned-IPA
+          path: ${{ runner.temp }}/ManicEMU-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 7
