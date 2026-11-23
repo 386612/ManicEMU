@@ -45,9 +45,8 @@ final class StikJITManager: NSObject {
     }
 
     var isBuiltInAvailable: Bool {
-        if isRunningInLiveContainer {
-            return false
-        }
+        // LiveContainer helper-process support is handled by the host environment.
+        // Do not hide the built-in StikJIT option solely because LC_HOME_PATH exists.
         return showsMethodPicker
     }
 
