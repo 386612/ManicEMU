@@ -540,7 +540,7 @@ final class StikJITHostCoordinator {
 
     private static func troubleshootingHint(_ message: String) -> String {
         if message.contains("NSExtension creation failed") {
-            return "\(message) StikJIT currently will not work inside LiveContainer."
+            return "\(message) Check that LiveContainer's Helper Process Support is enabled."
         }
         if message.contains("Timed out connecting to 10.7.0.1:49152") {
             return "\(message) Make sure LocalDevVPN is connected and either a Wi-Fi network is connected or Airplane Mode is enabled."
