@@ -137,10 +137,6 @@ final class StikJITHostCoordinator {
             completion(false, R.string.localizable.jitRequiresiOS174())
             return
         }
-        guard !StikJITManager.shared.isRunningInLiveContainer else {
-            completion(false, R.string.localizable.jitLiveContainerUnavailable())
-            return
-        }
         guard EntitlementChecker.hasGetTaskAllow else {
             completion(false, R.string.localizable.jitGetTaskAllowMissing())
             return
@@ -340,10 +336,6 @@ final class StikJITHostCoordinator {
     private func startEnableJIT(completion: @escaping (Bool, String?) -> Void) {
         guard #available(iOS 17.4, *) else {
             completion(false, R.string.localizable.jitRequiresiOS174())
-            return
-        }
-        guard !StikJITManager.shared.isRunningInLiveContainer else {
-            completion(false, R.string.localizable.jitLiveContainerUnavailable())
             return
         }
         guard let pairingData = pairingData() else {
